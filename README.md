@@ -19,6 +19,7 @@ for example:
 :archive {:format      :tgz
           :file-name "target/archive.tgz"
           :file-set  [{:source-path "target/dependencies/file-*.jar" :output-path "/jar-files/"}
+                      {:source-path "config" :output-path "/"}
                       {:source-path "target/application.jar" :output-path "/jar-files"}]}
 ```
 

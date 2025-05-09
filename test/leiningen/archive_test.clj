@@ -24,9 +24,9 @@
 
 (defn extract-tar-gz
   [^String source-file ^String target-dir]
-  (with-open [fis  (FileInputStream.  source-file)
-              gis  (GZIPInputStream. fis)
-              tis  (TarArchiveInputStream. gis)]
+  (with-open [fis (FileInputStream. source-file)
+              gis (GZIPInputStream. fis)
+              tis (TarArchiveInputStream. gis)]
     (loop []
       (when-let [entry (.getNextEntry tis)]
         (let [out-file (File. target-dir (.getName entry))]
@@ -83,25 +83,42 @@
 
 (deftest test-targz-files-in-current-dir
   (let [project {:name    "project" :version "1.2.3"
-                 :archive {:format :tgz
-                           :file-name "target/archive.tgz"
+                 :archive {:format    :tgz
+                           :file-name "target/archive.tar.gz"
                            :file-set  [{:source-path "test/resources/test/file-*.jar" :output-path "/jar-files/"}
                                        {:source-path "test/resources/test/file.txt" :output-path "/text-files"}]}}]
     (archive/archive project))
-  (extract-tar-gz "target/archive.tgz" extract-dir)
+  (extract-tar-gz "target/archive.tar.gz" extract-dir)
   (verify-files-exist (list "./target/extracted/jar-files/file-version.jar"
                             "./target/extracted/jar-files/file-version2.jar"
                             "./target/extracted//text-files/file.txt")))
 
 
 (deftest compress-tgz-without-file-name
-  (let [project {:name    "project" :version "1.2.3"
-                 :archive {:format :tgz
+  (let [project {:name    "project" :version "1.2.4"
+                 :archive {:format   :tgz
 
-                           :file-set  [{:source-path "test/resources/test/file-*.jar" :output-path "/jar-files/"}
-                                       {:source-path "test/resources/test/file.txt" :output-path "/text-files"}]}}]
+                           :file-set [{:source-path "test/resources/test/file-*.jar" :output-path "/jar-files/"}
+                                      {:source-path "test/resources/test/file.txt" :output-path "/text-files"}]}}]
+
     (archive/archive project))
-  (extract-tar-gz "./target/project-1.2.3.tgz" extract-dir)
+  (extract-tar-gz "./target/project-1.2.4.tar.gz" extract-dir)
   (verify-files-exist (list "./target/extracted/jar-files/file-version.jar"
                             "./target/extracted/jar-files/file-version2.jar"
                             "./target/extracted//text-files/file.txt")))
+
+(deftest allow-adding-directories
+  (let [project {:name    "project" :version "1.2.6"
+                 :archive {:format   :tgz
+                           :file-set [{:source-path "./test/resources/test/folder2" :output-path "/path"}]}}]
+    (archive/archive project)
+    (extract-tar-gz "./target/project-1.2.6.tar.gz" extract-dir)
+    (verify-files-exist (list "./target/extracted/path/folder2/folder/file.txt"))))
+
+(deftest allow-adding-directories-with-trailing-slash
+  (let [project {:name    "project" :version "1.2.5"
+                 :archive {:format   :tgz
+                           :file-set [{:source-path "test/resources/test/folder2" :output-path "/path/"}]}}]
+    (archive/archive project)
+    (extract-tar-gz "./target/project-1.2.5.tar.gz" extract-dir)
+    (verify-files-exist (list "./target/extracted/path/folder2/folder/file.txt"))))
