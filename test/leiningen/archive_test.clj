@@ -8,7 +8,7 @@
            (net.lingala.zip4j ZipFile)
            (org.apache.commons.compress.archivers.tar TarArchiveInputStream)))
 
-(def extract-dir "./target/extracted")
+(def ^:private extract-dir "./target/extracted")
 
 (defn- delete-recursively [directory]
   (let [path (Paths/get ^String directory (into-array String []))]
@@ -59,14 +59,14 @@
 (deftest test-zipping-files-in-current-dir
   (let [project {:name    "project" :version "1.2.3"
                  :archive {:file-name "target/target2/target3/archive.zip"
-                           :file-set  [{:source-path "test/resources/test/file-*.jar" :output-path "/jar-files/"}
-                                       {:source-path "test/resources/test/file.txt" :output-path "/text-files"}]}}]
+                           :file-set  [{:source-path "test/resources/test/file-*.jar" :output-path "/"}
+                                       {:source-path "test/resources/test/file.txt" :output-path "/"}]}}]
     (archive/archive project)
     (let [zip-file ^ZipFile (ZipFile. "./target/target2/target3/archive.zip")]
       (.extractAll zip-file extract-dir)))
-  (verify-files-exist (list "./target/extracted/jar-files/file-version.jar"
-                            "./target/extracted/jar-files/file-version2.jar"
-                            "./target/extracted//text-files/file.txt")))
+  (verify-files-exist (list "./target/extracted/file-version.jar"
+                            "./target/extracted/file-version2.jar"
+                            "./target/extracted//file.txt")))
 
 
 (deftest not-providing-file-name-defaults-to-using-project-name-and-version
@@ -122,3 +122,14 @@
     (archive/archive project)
     (extract-tar-gz "./target/project-1.2.5.tar.gz" extract-dir)
     (verify-files-exist (list "./target/extracted/path/folder2/folder/file.txt"))))
+
+
+(deftest adding-non-existing-file-does-not-crash
+  (let [project {:name    "project" :version "1.2.7"
+                 :archive {:format   :tgz
+                           :file-set [{:source-path "test/resources/test/this-does-not-exist.txt" :output-path "/"}
+
+                                      {:source-path "test/resources/test/folder2" :output-path "/"}]}}]
+    (archive/archive project)
+    (extract-tar-gz "./target/project-1.2.7.tar.gz" extract-dir)
+    (verify-files-exist (list "./target/extracted/folder2/folder/file.txt"))))

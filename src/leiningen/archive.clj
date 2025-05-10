@@ -33,7 +33,9 @@
 
                     (list file
                           (let [
-                                transformed-relativized-str (.replace ^String (.toString ^Path relativized-path) File/separator "/")]
+                                transformed-relativized-str (-> relativized-path
+                                                                .toString
+                                                                (.replace File/separator "/"))]
                             (str expected-path
                                  (if (.endsWith ^String expected-path File/separator)
                                    ""
@@ -60,7 +62,9 @@
       (case [(.exists ^File file) (.isDirectory ^File file)]
         [true true] (list-relative-files source-path output-path)
         [true false] (list (list (File. ^String source-path) output-path))
-        :else (list nil)))))
+        (do
+          (println (format "%s does not exist, it will not be added." source-path))
+          (list))))))
 
 
 (defn archive
