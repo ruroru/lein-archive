@@ -1,3 +1,5 @@
+[![Clojars Project](https://img.shields.io/clojars/v/org.clojars.jj/archive.svg)](https://clojars.org/org.clojars.jj/archive)
+
 # lein archive
 
 Lein archive is a leiningen plugin that adds a given set of files to an archive

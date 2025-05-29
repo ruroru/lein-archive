@@ -4,8 +4,7 @@
     [clojure.string :as str]
     [leiningen.archive.tgz :as tgz]
     [leiningen.archive.zip :as zip])
-  (:import (java.io File)
-           (java.nio.file Path)))
+  (:import (java.io File)))
 
 
 (defn- force-create-dir [path]
@@ -17,7 +16,7 @@
   (let [base-dir (io/file dir-path)]
     (when (.isDirectory base-dir)
       (->> (file-seq base-dir)
-           (filter #(.isFile %))
+           (filter #(.isFile ^File %))
            (map (fn [file]
                   (let [full-path (-> (.getCanonicalFile ^File file)
                                       .toPath
