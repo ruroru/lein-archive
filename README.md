@@ -8,7 +8,7 @@ Lein archive is a leiningen plugin that adds a given set of files to an archive
 ## Installation
 
 ```clojure
-[org.clojars.jj/lein-archive "1.0.0"]
+[org.clojars.jj/lein-archive "1.1.2"]
 ```
 
 ## Usage
