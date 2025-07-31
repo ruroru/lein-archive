@@ -5,7 +5,7 @@
             :url  "https://www.eclipse.org/legal/epl-2.0/"}
 
   :dependencies [[org.clojure/clojure "1.12.1"]
-                 [org.apache.commons/commons-compress "1.27.1"]]
+                 [org.apache.commons/commons-compress "1.28.0"]]
 
   :deploy-repositories [["clojars" {:url      "https://repo.clojars.org"
                                     :username :env/clojars_user
