@@ -1,4 +1,4 @@
-(defproject org.clojars.jj/archive "1.1.2"
+(defproject org.clojars.jj/archive "1.1.3-SNAPSHOT"
   :description "Leiningen plugin to effortlessly create archives of your project files. Supports tgz and zip formats"
   :url "https://github.com/ruroru/lein-archive"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
