@@ -13,7 +13,7 @@
 
 
   :profiles {:test {:dependencies [[net.lingala.zip4j/zip4j "2.11.5"]
-                                   [babashka/fs "0.5.25"]]
+                                   [babashka/fs "0.5.27"]]
                     :global-vars  {*warn-on-reflection* true}}}
 
   :plugins [[org.clojars.jj/bump "1.0.4"]
