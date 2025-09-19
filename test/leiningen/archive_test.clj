@@ -1,14 +1,19 @@
 (ns leiningen.archive-test
-  (:require [babashka.fs :as fs]
-            [clojure.test :refer [deftest is use-fixtures]]
-            [leiningen.archive :as archive])
-  (:import (java.io BufferedOutputStream File FileInputStream FileOutputStream)
+  (:require
+    [clojure.test :refer [deftest is use-fixtures]]
+    [leiningen.archive :as archive])
+  (:import (java.io BufferedOutputStream File FileInputStream FileOutputStream InputStream)
            (java.nio.file FileVisitResult Files LinkOption Paths SimpleFileVisitor)
            (java.util.zip GZIPInputStream)
-           (net.lingala.zip4j ZipFile)
-           (org.apache.commons.compress.archivers.tar TarArchiveInputStream)))
+           (org.apache.commons.compress.archivers.tar TarArchiveInputStream)
+           (org.apache.commons.compress.archivers.zip ZipArchiveInputStream)))
 
 (def ^:private extract-dir "./target/extracted")
+
+(defn- exists?
+  [path]
+  (-> (File. ^String path)
+      .exists))
 
 (defn- delete-recursively [directory]
   (let [path (Paths/get ^String directory (into-array String []))]
@@ -46,7 +51,7 @@
         (recur)))))
 
 (use-fixtures :each (fn [f]
-                      (when (fs/exists? extract-dir)
+                      (when (exists? extract-dir)
                         (delete-recursively extract-dir))
 
                       (f)))
@@ -62,8 +67,20 @@
                            :file-set  [{:source-path "test/resources/test/file-*.jar" :output-path "/"}
                                        {:source-path "test/resources/test/file.txt" :output-path "/"}]}}]
     (archive/archive project)
-    (let [zip-file ^ZipFile (ZipFile. "./target/target2/target3/archive.zip")]
-      (.extractAll zip-file extract-dir)))
+    (let [zip-path "./target/target2/target3/archive.zip"]
+      (with-open [fis (FileInputStream. zip-path)
+                  zis (ZipArchiveInputStream. fis)]
+        (loop [entry (.getNextZipEntry zis)]
+          (when entry
+            (let [entry-file (File. ^String extract-dir (.getName entry))]
+              (if (.isDirectory entry)
+                (.mkdirs entry-file)
+                (do
+                  (.mkdirs (.getParentFile entry-file))
+                  (with-open [fos (FileOutputStream. entry-file)]
+                    (.transferTo ^InputStream zis fos))))
+              (recur (.getNextZipEntry zis)))))))
+    )
   (verify-files-exist (list "./target/extracted/file-version.jar"
                             "./target/extracted/file-version2.jar"
                             "./target/extracted//file.txt")))
@@ -74,8 +91,19 @@
                  :archive {:file-set [{:source-path "test/resources/test/file-*.jar" :output-path "/jar-files/"}
                                       {:source-path "test/resources/test/file.txt" :output-path "/text-files"}]}}]
     (archive/archive project)
-    (let [zip-file ^ZipFile (ZipFile. "./target/project-1.2.3.zip")]
-      (.extractAll zip-file extract-dir)))
+    (let [zip-path "./target/project-1.2.3.zip"]
+      (with-open [fis (FileInputStream. zip-path)
+                  zis (ZipArchiveInputStream. fis)]
+        (loop [entry (.getNextZipEntry zis)]
+          (when entry
+            (let [entry-file (File. ^String extract-dir (.getName entry))]
+              (if (.isDirectory entry)
+                (.mkdirs entry-file)
+                (do
+                  (.mkdirs (.getParentFile entry-file))
+                  (with-open [fos (FileOutputStream. entry-file)]
+                    (.transferTo ^InputStream zis fos))))
+              (recur (.getNextZipEntry zis))))))))
   (verify-files-exist (list "./target/extracted/jar-files/file-version.jar"
                             "./target/extracted/jar-files/file-version2.jar"
                             "./target/extracted//text-files/file.txt")))
